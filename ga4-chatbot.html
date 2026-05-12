@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics AI — GA4 Chatbot</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f4;
+    --bg-tertiary: #eeede9;
+    --bg-info: #e6f1fb;
+    --bg-success: #eaf3de;
+    --bg-danger: #fcebeb;
+    --text: #1a1a18;
+    --text-secondary: #6b6b67;
+    --text-info: #185fa5;
+    --text-success: #3b6d11;
+    --text-danger: #a32d2d;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.25);
+    --radius: 10px;
+    --radius-lg: 14px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #262624;
+      --bg-tertiary: #2e2e2b;
+      --bg-info: #0c447c22;
+      --bg-success: #27500a22;
+      --bg-danger: #791f1f22;
+      --text: #f0ede6;
+      --text-secondary: #9a9993;
+      --text-info: #85b7eb;
+      --text-success: #97c459;
+      --text-danger: #f09595;
+      --border: rgba(255,255,255,0.1);
+      --border-hover: rgba(255,255,255,0.22);
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-tertiary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text);
+  }
+
+  #app {
+    width: 100%;
+    max-width: 560px;
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 680px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  #header {
+    padding: 14px 18px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f87171;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  #header h1 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--bg-success);
+    color: var(--text-success);
+    display: none;
+  }
+
+  #property-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  #setup-panel {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .info-box {
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .info-box strong { color: var(--text); }
+  .info-box a { color: var(--text-info); text-decoration: none; }
+  .info-box a:hover { text-decoration: underline; }
+  .info-box code {
+    background: var(--bg-tertiary);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  .field label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 13px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-family: var(--font);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  .field input:focus { border-color: var(--border-hover); }
+
+  #connect-btn {
+    padding: 10px 16px;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  #connect-btn:hover { background: var(--bg-secondary); }
+
+  .demo-link {
+    background: none;
+    border: none;
+    color: var(--text-info);
+    cursor: pointer;
+    font-size: 12.5px;
+    text-decoration: underline;
+    padding: 0 3px;
+    font-family: var(--font);
+  }
+
+  #chat-area {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .msg {
+    max-width: 88%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .msg.user { align-self: flex-start; }
+  .msg.bot  { align-self: flex-end; }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .user .bubble {
+    background: var(--bg-info);
+    color: var(--text-info);
+    border-bottom-right-radius: 4px;
+  }
+
+  .bot .bubble {
+    background: var(--bg-secondary);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    border: 0.5px solid var(--border);
+  }
+
+  .bot .bubble.loading {
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .bot .bubble.error {
+    background: var(--bg-danger);
+    color: var(--text-danger);
+    border-color: var(--text-danger);
+  }
+
+  .metric-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .metric-card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    flex: 1;
+    min-width: 110px;
+  }
+
+  .metric-card .val {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .metric-card .lbl {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 12.5px;
+  }
+
+  th {
+    text-align: right;
+    padding: 5px 8px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  td {
+    padding: 5px 8px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  #suggestions {
+    padding: 8px 14px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    border-top: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .chip {
+    padding: 5px 12px;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    background: none;
+    font-family: var(--font);
+    transition: background 0.1s, color 0.1s;
+    white-space: nowrap;
+  }
+
+  .chip:hover {
+    background: var(--bg-secondary);
+    color: var(--text);
+  }
+
+  #input-area {
+    padding: 12px 14px;
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  #user-input {
+    flex: 1;
+    padding: 9px 16px;
+    font-size: 13px;
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  #user-input:focus { border-color: var(--border-hover); }
+  #user-input::placeholder { color: var(--text-secondary); }
+
+  #send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+
+  #send-btn:hover { background: var(--bg-secondary); }
+  #send-btn i { font-size: 16px; color: var(--text); }
+
+  @media (max-width: 600px) {
+    body { padding: 0; align-items: flex-start; }
+    #app { height: 100vh; border-radius: 0; border: none; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="header">
+    <div class="dot" id="status-dot"></div>
+    <h1>Analytics AI <span class="badge" id="status-badge">מחובר</span></h1>
+    <span id="property-label"></span>
+  </div>
+
+  <div id="setup-panel">
+    <div class="info-box">
+      <strong>📊 Analytics AI Chatbot</strong><br><br>
+      שאל שאלות בעברית על האתר שלך וקבל תשובות ישירות מ-Google Analytics 4.<br><br>
+      כדי לחבר נתונים אמיתיים תצטרך Service Account מ-Google Cloud.
+      לבינתיים — נסה את <strong>מצב הדמו</strong> עם נתוני דוגמה.
+    </div>
+
+    <div class="field">
+      <label>Service Account Email</label>
+      <input id="sa-email" type="text" placeholder="your-sa@project.iam.gserviceaccount.com" />
+    </div>
+
+    <div class="field">
+      <label>Private Key (מה-JSON שהורדת)</label>
+      <input id="private-key" type="password" placeholder="-----BEGIN PRIVATE KEY-----..." />
+    </div>
+
+    <div class="field">
+      <label>GA4 Property ID</label>
+      <input id="prop-id" type="text" value="495764606" placeholder="123456789" />
+    </div>
+
+    <button id="connect-btn" onclick="connectGA()">
+      <i class="ti ti-brand-google-analytics"></i> התחבר ל-GA4
+    </button>
+
+    <div class="info-box">
+      💡 רוצה לנסות בלי הגדרות?
+      <button class="demo-link" onclick="startDemo()">כנס למצב דמו</button>
+      עם נתוני דוגמה מוכנים
+    </div>
+
+    <div class="info-box">
+      <strong>איך מחברים?</strong><br>
+      1. <a href="https://console.cloud.google.com/apis/credentials" target="_blank">צור Service Account</a> ב-Google Cloud<br>
+      2. הוסף אותו ב-GA4 → Admin → Property Access Management כ-Viewer<br>
+      3. הורד JSON key והכנס <code>client_email</code> ו-<code>private_key</code> למעלה
+    </div>
+  </div>
+
+  <div id="chat-area">
+    <div id="messages"></div>
+    <div id="suggestions">
+      <button class="chip" onclick="ask('כמה משתמשים היו באתר היום?')">👤 משתמשים היום</button>
+      <button class="chip" onclick="ask('כמה pageviews היו השבוע?')">📄 Pageviews שבוע</button>
+      <button class="chip" onclick="ask('מה עמודי הנחיתה הפופולריים?')">🏠 עמודים פופולריים</button>
+      <button class="chip" onclick="ask('מאיפה מגיע הטראפיק?')">🌐 מקורות טראפיק</button>
+      <button class="chip" onclick="ask('כמה conversions היו החודש?')">🎯 Conversions</button>
+    </div>
+    <div id="input-area">
+      <input id="user-input" type="text" placeholder="שאל שאלה על האתר שלך..." onkeydown="if(event.key==='Enter')sendMsg()" />
+      <button id="send-btn" onclick="sendMsg()" aria-label="שלח">
+        <i class="ti ti-send"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEMO_DATA = {
+  users: { metrics: [{ name: 'משתמשים פעילים', value: '247' }, { name: 'סשנים', value: '389' }] },
+  pageviews: { metrics: [{ name: 'צפיות בדפים', value: '3,421' }, { name: 'Bounce Rate', value: '38.2%' }] },
+  pages: { table: { headers: ['עמוד', 'צפיות', 'משתמשים'], rows: [['/', '1,240', '892'], ['/about', '433', '389'], ['/contact', '287', '251'], ['/blog', '198', '176']] } },
+  traffic: { table: { headers: ['מקור', 'סשנים', 'אחוז'], rows: [['Organic Search', '198', '51%'], ['Direct', '89', '23%'], ['Social', '67', '17%'], ['Referral', '35', '9%']] } },
+  conversions: { metrics: [{ name: 'Conversions', value: '43' }, { name: 'אחוז המרה', value: '11%' }] }
+};
+
+let gaConfig = null;
+let demoMode = false;
+let msgHistory = [];
+
+function connectGA() {
+  const email = document.getElementById('sa-email').value.trim();
+  const key = document.getElementById('private-key').value.trim();
+  const prop = document.getElementById('prop-id').value.trim();
+  if (!email || !key) { alert('נא למלא Service Account Email ו-Private Key'); return; }
+  gaConfig = { email, key, propertyId: prop || '495764606' };
+  startChat(false);
+}
+
+function startDemo() {
+  demoMode = true;
+  startChat(true);
+}
+
+function startChat(demo) {
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('chat-area').style.display = 'flex';
+  document.getElementById('status-dot').style.background = '#4ade80';
+  document.getElementById('status-badge').style.display = 'inline';
+  document.getElementById('property-label').textContent = demo ? '(מצב דמו)' : `Property: ${gaConfig?.propertyId}`;
+  addBot(demo
+    ? '👋 שלום! אני במצב דמו עם נתוני דוגמה. שאל אותי כל שאלה על האתר שלך!'
+    : '✅ מחובר ל-GA4! שאל אותי כל שאלה על האתר שלך בעברית חופשית.');
+}
+
+function addUser(text) {
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `<div class="bubble">${escHtml(text)}</div>`;
+  document.getElementById('messages').appendChild(d);
+  scrollDown();
+}
+
+function addBot(html, cls = '') {
+  const d = document.createElement('div');
+  d.className = 'msg bot';
+  d.innerHTML = `<div class="bubble ${cls}">${html}</div>`;
+  document.getElementById('messages').appendChild(d);
+  scrollDown();
+  return d;
+}
+
+function scrollDown() {
+  const m = document.getElementById('messages');
+  m.scrollTop = m.scrollHeight;
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function ask(q) {
+  document.getElementById('user-input').value = q;
+  sendMsg();
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('user-input');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  addUser(q);
+  if (demoMode) { await handleDemo(q); return; }
+  await handleReal(q);
+}
+
+async function handleDemo(q) {
+  const loader = addBot('מחשב...', 'loading');
+  await new Promise(r => setTimeout(r, 600 + Math.random() * 400));
+  loader.remove();
+
+  const ql = q.toLowerCase();
+  let matched = null;
+  if (ql.includes('משתמש') || ql.includes('user') || ql.includes('כמה אנשים')) matched = DEMO_DATA.users;
+  else if (ql.includes('page') || ql.includes('צפי') || ql.includes('view') || ql.includes('ביקור')) matched = DEMO_DATA.pageviews;
+  else if (ql.includes('עמוד') || ql.includes('דף') || ql.includes('נחית') || ql.includes('פופול')) matched = DEMO_DATA.pages;
+  else if (ql.includes('טראפיק') || ql.includes('מקור') || ql.includes('traffic') || ql.includes('מאיפה')) matched = DEMO_DATA.traffic;
+  else if (ql.includes('conver') || ql.includes('המר') || ql.includes('נרשם') || ql.includes('רישום')) matched = DEMO_DATA.conversions;
+
+  if (matched) {
+    addBot(renderData(matched));
+  } else {
+    await callClaude(q, true);
+  }
+}
+
+function renderData(d) {
+  if (d.metrics) {
+    let h = '<div class="metric-row">';
+    d.metrics.forEach(m => {
+      h += `<div class="metric-card"><div class="val">${m.value}</div><div class="lbl">${m.name}</div></div>`;
+    });
+    return h + '</div>';
+  }
+  if (d.table) {
+    let h = `<table><thead><tr>${d.table.headers.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>`;
+    d.table.rows.forEach(r => { h += `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`; });
+    return h + '</tbody></table>';
+  }
+  return '';
+}
+
+async function handleReal(q) {
+  const loader = addBot('מנתח את השאלה...', 'loading');
+  try {
+    const plan = await buildGAPlan(q);
+    loader.remove();
+    const loader2 = addBot('מושך נתונים מ-GA4...', 'loading');
+    const result = await fetchGA4(plan);
+    loader2.remove();
+    displayGA4(result);
+  } catch(e) {
+    loader.remove();
+    addBot('❌ שגיאה: ' + escHtml(e.message), 'error');
+  }
+}
+
+async function callClaude(q, demo) {
+  msgHistory.push({ role: 'user', content: q });
+  const sys = `You are a helpful analytics assistant. Answer in Hebrew, be concise.
+Current date: ${new Date().toLocaleDateString('he-IL')}.${demo ? ' This is demo mode with sample data.' : ''}`;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system: sys, messages: msgHistory })
+  });
+  const data = await res.json();
+  const text = data.content.map(i => i.text || '').join('');
+  msgHistory.push({ role: 'assistant', content: text });
+  if (msgHistory.length > 20) msgHistory = msgHistory.slice(-20);
+  addBot(text.replace(/\n/g, '<br>'));
+}
+
+async function buildGAPlan(q) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 500,
+      system: `You are a GA4 API expert. Return ONLY a JSON object (no markdown) with:
+{"dateRange":{"startDate":"today or 7daysAgo or 30daysAgo or YYYY-MM-DD","endDate":"today"},
+"metrics":["metric1"],"dimensions":["dim1"],"limit":10}
+Common metrics: activeUsers,sessions,screenPageViews,bounceRate,conversions,newUsers,engagementRate
+Common dimensions: pagePath,sessionSource,country,deviceCategory,date`,
+      messages: [{ role: 'user', content: q }]
+    })
+  });
+  const data = await res.json();
+  const text = data.content.map(i => i.text || '').join('').replace(/```json|```/g, '').trim();
+  return JSON.parse(text);
+}
+
+async function fetchGA4(plan) {
+  const token = await getToken();
+  const body = {
+    dateRanges: [{ startDate: plan.dateRange.startDate, endDate: plan.dateRange.endDate }],
+    metrics: plan.metrics.map(m => ({ name: m })),
+    dimensions: (plan.dimensions || []).map(d => ({ name: d })),
+    limit: plan.limit || 10
+  };
+  const res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${gaConfig.propertyId}:runReport`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'GA4 error'); }
+  return res.json();
+}
+
+async function getToken() {
+  const hdr = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const now = Math.floor(Date.now() / 1000);
+  const claim = btoa(JSON.stringify({
+    iss: gaConfig.email,
+    scope: 'https://www.googleapis.com/auth/analytics.readonly',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600, iat: now
+  })).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const signInput = `${hdr}.${claim}`;
+  const key = await importKey(gaConfig.key);
+  const sig = await crypto.subtle.sign({ name: 'RSASSA-PKCS1-v1_5' }, key, new TextEncoder().encode(signInput));
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  const jwt = `${signInput}.${sigB64}`;
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+  });
+  const data = await res.json();
+  if (!data.access_token) throw new Error('Token error: ' + JSON.stringify(data));
+  return data.access_token;
+}
+
+async function importKey(pem) {
+  const body = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(body), c => c.charCodeAt(0));
+  return crypto.subtle.importKey('pkcs8', der.buffer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+}
+
+function displayGA4(data) {
+  if (!data.rows || !data.rows.length) { addBot('לא נמצאו נתונים לתקופה המבוקשת.'); return; }
+  const hasDims = data.dimensionHeaders?.length > 0 && data.rows.length > 1;
+  if (hasDims) {
+    const headers = [...(data.dimensionHeaders||[]).map(h=>h.name), ...(data.metricHeaders||[]).map(h=>h.name)];
+    let h = `<table><thead><tr>${headers.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`;
+    data.rows.forEach(r => {
+      const cells = [...(r.dimensionValues||[]).map(v=>v.value), ...(r.metricValues||[]).map(v=>v.value)];
+      h += `<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+    });
+    addBot(h + '</tbody></table>');
+  } else {
+    let h = '<div class="metric-row">';
+    (data.rows[0]?.metricValues||[]).forEach((v,i) => {
+      const name = data.metricHeaders?.[i]?.name || '';
+      h += `<div class="metric-card"><div class="val">${Number(v.value).toLocaleString('he-IL')}</div><div class="lbl">${name}</div></div>`;
+    });
+    addBot(h + '</div>');
+  }
+}
+</script>
+</body>
+</html>
