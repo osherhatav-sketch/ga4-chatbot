@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics AI — GA4 Chatbot</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f4;
+    --bg-tertiary: #eeede9;
+    --bg-info: #e6f1fb;
+    --bg-success: #eaf3de;
+    --bg-danger: #fcebeb;
+    --text: #1a1a18;
+    --text-secondary: #6b6b67;
+    --text-info: #185fa5;
+    --text-success: #3b6d11;
+    --text-danger: #a32d2d;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.25);
+    --radius: 10px;
+    --radius-lg: 14px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #262624;
+      --bg-tertiary: #2e2e2b;
+      --bg-info: rgba(12,68,124,0.2);
+      --bg-success: rgba(39,80,10,0.2);
+      --bg-danger: rgba(121,31,31,0.2);
+      --text: #f0ede6;
+      --text-secondary: #9a9993;
+      --text-info: #85b7eb;
+      --text-success: #97c459;
+      --text-danger: #f09595;
+      --border: rgba(255,255,255,0.1);
+      --border-hover: rgba(255,255,255,0.22);
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-tertiary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: var(--text);
+  }
+
+  #app {
+    width: 100%;
+    max-width: 560px;
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 680px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  #header {
+    padding: 14px 18px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #f87171; flex-shrink: 0; transition: background 0.3s; }
+
+  #header h1 { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--bg-success); color: var(--text-success); display: none; }
+
+  #property-label { font-size: 12px; color: var(--text-secondary); }
+
+  /* ── Login screen ── */
+  #login-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .logo-circle {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--bg-info);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-circle i { font-size: 30px; color: var(--text-info); }
+
+  #login-panel h2 { font-size: 17px; font-weight: 500; color: var(--text); }
+  #login-panel p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; max-width: 320px; }
+
+  #google-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 22px;
+    background: var(--bg);
+    border: 1px solid var(--border-hover);
+    border-radius: 8px;
+    font-size: 14px; font-weight: 500; color: var(--text);
+    cursor: pointer; font-family: var(--font);
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  #google-btn:hover { background: var(--bg-secondary); box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+  #google-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  .setup-note {
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 12px; color: var(--text-secondary);
+    line-height: 1.7; text-align: right; width: 100%;
+  }
+  .setup-note strong { color: var(--text); }
+  .setup-note a { color: var(--text-info); text-decoration: none; }
+  .setup-note code { background: var(--bg-tertiary); padding: 1px 5px; border-radius: 4px; font-family: var(--mono); font-size: 11px; color: var(--text); }
+
+  .divider { display: flex; align-items: center; gap: 10px; width: 100%; color: var(--text-secondary); font-size: 12px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
+
+  #demo-btn {
+    background: none; border: none; color: var(--text-info);
+    font-size: 13px; cursor: pointer; font-family: var(--font);
+    text-decoration: underline; padding: 0;
+  }
+
+  /* ── OAuth setup instructions ── */
+  #setup-instructions {
+    display: none;
+    flex: 1; overflow-y: auto; padding: 20px;
+    flex-direction: column; gap: 12px;
+  }
+
+  .step-row { display: flex; gap: 10px; align-items: flex-start; }
+  .snum { width: 22px; height: 22px; border-radius: 50%; background: var(--bg-info); color: var(--text-info); font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .sbody { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .sbody strong { color: var(--text); }
+  .sbody a { color: var(--text-info); }
+  .sbody code { background: var(--bg-tertiary); padding: 1px 5px; border-radius: 4px; font-family: var(--mono); font-size: 11px; color: var(--text); }
+
+  #client-id-input {
+    width: 100%; padding: 9px 12px; font-size: 13px;
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    background: var(--bg-secondary); color: var(--text);
+    font-family: var(--font); outline: none;
+  }
+  #client-id-input:focus { border-color: var(--border-hover); }
+
+  #launch-oauth-btn {
+    padding: 10px 16px; background: var(--bg);
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; color: var(--text);
+    cursor: pointer; font-family: var(--font);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 0.15s;
+  }
+  #launch-oauth-btn:hover { background: var(--bg-secondary); }
+
+  /* ── Chat ── */
+  #chat-area { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+
+  #messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+
+  .msg { max-width: 88%; display: flex; flex-direction: column; }
+  .msg.user { align-self: flex-start; }
+  .msg.bot  { align-self: flex-end; }
+
+  .bubble { padding: 10px 14px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; }
+  .user .bubble { background: var(--bg-info); color: var(--text-info); border-bottom-right-radius: 4px; }
+  .bot  .bubble { background: var(--bg-secondary); color: var(--text); border-bottom-left-radius: 4px; border: 0.5px solid var(--border); }
+  .bot  .bubble.loading { color: var(--text-secondary); font-style: italic; }
+  .bot  .bubble.error   { background: var(--bg-danger); color: var(--text-danger); }
+
+  .metric-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .metric-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; flex: 1; min-width: 110px; }
+  .metric-card .val { font-size: 22px; font-weight: 500; color: var(--text); }
+  .metric-card .lbl { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; }
+  th { text-align: right; padding: 5px 8px; background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 500; border-bottom: 0.5px solid var(--border); }
+  td { padding: 5px 8px; border-bottom: 0.5px solid var(--border); }
+
+  #suggestions { padding: 8px 14px; display: flex; gap: 6px; flex-wrap: wrap; border-top: 0.5px solid var(--border); flex-shrink: 0; }
+  .chip { padding: 5px 12px; border: 0.5px solid var(--border); border-radius: 20px; font-size: 12px; color: var(--text-secondary); cursor: pointer; background: none; font-family: var(--font); transition: background 0.1s; white-space: nowrap; }
+  .chip:hover { background: var(--bg-secondary); color: var(--text); }
+
+  #input-area { padding: 12px 14px; border-top: 0.5px solid var(--border); display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  #user-input { flex: 1; padding: 9px 16px; font-size: 13px; border: 0.5px solid var(--border); border-radius: 20px; background: var(--bg-secondary); color: var(--text); font-family: var(--font); outline: none; transition: border-color 0.15s; }
+  #user-input:focus { border-color: var(--border-hover); }
+  #user-input::placeholder { color: var(--text-secondary); }
+  #send-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); border: 0.5px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
+  #send-btn:hover { background: var(--bg-secondary); }
+  #send-btn i { font-size: 16px; color: var(--text); }
+
+  @media (max-width: 600px) {
+    body { padding: 0; align-items: flex-start; }
+    #app { height: 100vh; border-radius: 0; border: none; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="header">
+    <div class="dot" id="status-dot"></div>
+    <h1>Analytics AI <span class="badge" id="status-badge">מחובר</span></h1>
+    <span id="property-label"></span>
+  </div>
+
+  <!-- מסך כניסה -->
+  <div id="login-panel">
+    <div class="logo-circle">
+      <i class="ti ti-chart-bar"></i>
+    </div>
+    <h2>Analytics AI Chatbot</h2>
+    <p>שאלי שאלות בעברית על האתר שלך וקבלי תשובות מיידיות מ-Google Analytics</p>
+
+    <button id="google-btn" onclick="startOAuth()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      התחברי עם Google
+    </button>
+
+    <div class="divider">או</div>
+
+    <button id="demo-btn" onclick="startDemo()">נסי במצב דמו עם נתוני דוגמה</button>
+
+    <div class="setup-note">
+      <strong>📋 דרישה אחת לפני הכניסה:</strong><br>
+      צריך ליצור <strong>OAuth Client ID</strong> ב-Google Cloud פעם אחת.
+      <a href="#" onclick="showSetup(); return false;">לחצי כאן להוראות (2 דקות)</a>
+    </div>
+  </div>
+
+  <!-- הוראות הגדרת OAuth -->
+  <div id="setup-instructions">
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px;">הגדרת OAuth — פעם אחת בלבד</div>
+
+    <div class="step-row">
+      <div class="snum">1</div>
+      <div class="sbody">כנסי ל־<a href="https://console.cloud.google.com/apis/credentials" target="_blank">console.cloud.google.com/apis/credentials</a></div>
+    </div>
+    <div class="step-row">
+      <div class="snum">2</div>
+      <div class="sbody">לחצי <strong>Create Credentials → OAuth client ID</strong></div>
+    </div>
+    <div class="step-row">
+      <div class="snum">3</div>
+      <div class="sbody">Application type: <strong>Web application</strong><br>
+        תחת <strong>Authorized JavaScript origins</strong> הוסיפי:<br>
+        <code>null</code> (לקובץ HTML מקומי)<br>
+        או כתובת האתר שלך אם תעלי לשרת
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="snum">4</div>
+      <div class="sbody">לחצי <strong>Create</strong> — תקבלי <strong>Client ID</strong> שנראה כך:<br>
+        <code>123456789-abc....apps.googleusercontent.com</code>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="snum">5</div>
+      <div class="sbody">הכניסי את ה-Client ID כאן:</div>
+    </div>
+
+    <input id="client-id-input" type="text" placeholder="123456789-abc....apps.googleusercontent.com" />
+
+    <button id="launch-oauth-btn" onclick="saveClientId()">
+      <i class="ti ti-check"></i> שמרי והתחברי
+    </button>
+
+    <button onclick="showLogin()" style="background:none;border:none;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:var(--font);text-decoration:underline;padding:4px 0;">חזרה</button>
+  </div>
+
+  <!-- צ'אט -->
+  <div id="chat-area">
+    <div id="messages"></div>
+    <div id="suggestions">
+      <button class="chip" onclick="ask('כמה משתמשים היו באתר היום?')">👤 משתמשים היום</button>
+      <button class="chip" onclick="ask('כמה pageviews היו השבוע?')">📄 Pageviews שבוע</button>
+      <button class="chip" onclick="ask('מה עמודי הנחיתה הפופולריים?')">🏠 עמודים פופולריים</button>
+      <button class="chip" onclick="ask('מאיפה מגיע הטראפיק?')">🌐 מקורות טראפיק</button>
+      <button class="chip" onclick="ask('כמה conversions היו החודש?')">🎯 Conversions</button>
+    </div>
+    <div id="input-area">
+      <input id="user-input" type="text" placeholder="שאלי שאלה על האתר שלך..." onkeydown="if(event.key==='Enter')sendMsg()" />
+      <button id="send-btn" onclick="sendMsg()" aria-label="שלח">
+        <i class="ti ti-send"></i>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async></script>
+
+<script>
+const PROPERTY_ID = '495764606';
+const SCOPES = 'https://www.googleapis.com/auth/analytics.readonly';
+
+let accessToken = null;
+let demoMode = false;
+let msgHistory = [];
+let clientId = localStorage.getItem('ga4_client_id') || '137195724127-ujuq16bf4v949sp221isafrcumk9t1qu.apps.googleusercontent.com';
+
+const DEMO_DATA = {
+  users:       { metrics: [{ name: 'משתמשים פעילים', value: '247' }, { name: 'סשנים', value: '389' }] },
+  pageviews:   { metrics: [{ name: 'צפיות בדפים', value: '3,421' }, { name: 'Bounce Rate', value: '38.2%' }] },
+  pages:       { table: { headers: ['עמוד','צפיות','משתמשים'], rows: [['/', '1,240','892'],['/about','433','389'],['/contact','287','251'],['/blog','198','176']] } },
+  traffic:     { table: { headers: ['מקור','סשנים','אחוז'], rows: [['Organic Search','198','51%'],['Direct','89','23%'],['Social','67','17%'],['Referral','35','9%']] } },
+  conversions: { metrics: [{ name: 'Conversions', value: '43' }, { name: 'אחוז המרה', value: '11%' }] }
+};
+
+function showLogin()        { document.getElementById('login-panel').style.display = ''; document.getElementById('setup-instructions').style.display = 'none'; }
+function showSetup()        { document.getElementById('login-panel').style.display = 'none'; document.getElementById('setup-instructions').style.display = 'flex'; }
+function startDemo()        { demoMode = true; startChat('(מצב דמו)'); }
+
+function startOAuth() {
+  if (!clientId) { showSetup(); return; }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.access_token) { accessToken = resp.access_token; startChat('מחובר'); }
+      else { alert('הכניסה נכשלה: ' + JSON.stringify(resp)); }
+    }
+  });
+  client.requestAccessToken();
+}
+
+function saveClientId() {
+  const val = document.getElementById('client-id-input').value.trim();
+  if (!val) { alert('נא להכניס Client ID'); return; }
+  clientId = val;
+  localStorage.setItem('ga4_client_id', val);
+  showLogin();
+  setTimeout(startOAuth, 300);
+}
+
+function startChat(label) {
+  document.getElementById('login-panel').style.display = 'none';
+  document.getElementById('setup-instructions').style.display = 'none';
+  document.getElementById('chat-area').style.display = 'flex';
+  document.getElementById('status-dot').style.background = '#4ade80';
+  document.getElementById('status-badge').style.display = 'inline';
+  document.getElementById('property-label').textContent = label;
+  addBot(demoMode
+    ? '👋 שלום! אני במצב דמו עם נתוני דוגמה. שאלי אותי כל שאלה!'
+    : '✅ מחוברת ל-GA4! שאלי אותי כל שאלה על האתר שלך בעברית חופשית.');
+}
+
+/* ── Chat UI ── */
+function addUser(text) {
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `<div class="bubble">${esc(text)}</div>`;
+  document.getElementById('messages').appendChild(d);
+  scrollDown();
+}
+function addBot(html, cls = '') {
+  const d = document.createElement('div');
+  d.className = 'msg bot';
+  d.innerHTML = `<div class="bubble ${cls}">${html}</div>`;
+  document.getElementById('messages').appendChild(d);
+  scrollDown();
+  return d;
+}
+function scrollDown() { const m = document.getElementById('messages'); m.scrollTop = m.scrollHeight; }
+function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ask(q) { document.getElementById('user-input').value = q; sendMsg(); }
+
+async function sendMsg() {
+  const inp = document.getElementById('user-input');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  addUser(q);
+  demoMode ? await handleDemo(q) : await handleReal(q);
+}
+
+/* ── Demo ── */
+async function handleDemo(q) {
+  const loader = addBot('מחשב...', 'loading');
+  await sleep(700);
+  loader.remove();
+  const ql = q.toLowerCase();
+  let d = null;
+  if (ql.includes('משתמש') || ql.includes('user'))             d = DEMO_DATA.users;
+  else if (ql.includes('page') || ql.includes('צפי'))          d = DEMO_DATA.pageviews;
+  else if (ql.includes('עמוד') || ql.includes('נחית'))         d = DEMO_DATA.pages;
+  else if (ql.includes('טראפיק') || ql.includes('מקור'))       d = DEMO_DATA.traffic;
+  else if (ql.includes('conver') || ql.includes('המר') || ql.includes('נרשם')) d = DEMO_DATA.conversions;
+  if (d) addBot(renderData(d));
+  else   await callClaude(q, true);
+}
+
+/* ── Real GA4 ── */
+async function handleReal(q) {
+  const l1 = addBot('מנתח את השאלה...', 'loading');
+  try {
+    const plan = await buildPlan(q);
+    l1.remove();
+    const l2 = addBot('מושך נתונים מ-GA4...', 'loading');
+    const data = await fetchGA4(plan);
+    l2.remove();
+    displayGA4(data);
+  } catch(e) {
+    l1.remove();
+    addBot('❌ ' + esc(e.message), 'error');
+  }
+}
+
+async function buildPlan(q) {
+  const res = await claudeAPI([{ role:'user', content: q }],
+    `You are a GA4 API expert. Return ONLY JSON (no markdown):
+{"dateRange":{"startDate":"today|7daysAgo|30daysAgo","endDate":"today"},
+"metrics":["activeUsers"],"dimensions":[],"limit":10}
+Metrics: activeUsers,sessions,screenPageViews,bounceRate,conversions,newUsers,engagementRate
+Dimensions: pagePath,sessionSource,country,deviceCategory,date`);
+  return JSON.parse(res.replace(/```json|```/g,'').trim());
+}
+
+async function fetchGA4(plan) {
+  const body = {
+    dateRanges: [{ startDate: plan.dateRange.startDate, endDate: plan.dateRange.endDate }],
+    metrics: plan.metrics.map(m => ({ name: m })),
+    dimensions: (plan.dimensions||[]).map(d => ({ name: d })),
+    limit: plan.limit || 10
+  };
+  const res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${PROPERTY_ID}:runReport`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'GA4 error'); }
+  return res.json();
+}
+
+function displayGA4(data) {
+  if (!data.rows?.length) { addBot('לא נמצאו נתונים לתקופה המבוקשת.'); return; }
+  const hasDims = data.dimensionHeaders?.length > 0 && data.rows.length > 1;
+  if (hasDims) {
+    const headers = [...(data.dimensionHeaders||[]).map(h=>h.name), ...(data.metricHeaders||[]).map(h=>h.name)];
+    let h = `<table><thead><tr>${headers.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`;
+    data.rows.forEach(r => {
+      const cells = [...(r.dimensionValues||[]).map(v=>v.value), ...(r.metricValues||[]).map(v=>v.value)];
+      h += `<tr>${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+    });
+    addBot(h + '</tbody></table>');
+  } else {
+    let h = '<div class="metric-row">';
+    (data.rows[0]?.metricValues||[]).forEach((v,i) => {
+      h += `<div class="metric-card"><div class="val">${Number(v.value).toLocaleString('he-IL')}</div><div class="lbl">${data.metricHeaders?.[i]?.name||''}</div></div>`;
+    });
+    addBot(h + '</div>');
+  }
+}
+
+/* ── Claude API ── */
+async function callClaude(q, demo) {
+  msgHistory.push({ role:'user', content: q });
+  const text = await claudeAPI(msgHistory,
+    `You are a helpful analytics assistant. Answer in Hebrew, be concise. Today: ${new Date().toLocaleDateString('he-IL')}.${demo?' Demo mode.':''}`);
+  msgHistory.push({ role:'assistant', content: text });
+  if (msgHistory.length > 20) msgHistory = msgHistory.slice(-20);
+  addBot(text.replace(/\n/g,'<br>'));
+}
+
+async function claudeAPI(messages, system) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': localStorage.getItem('anthropic_key'), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:800, system, messages })
+  });
+  const data = await res.json();
+  if (!data.content) throw new Error(data.error?.message || JSON.stringify(data));
+  return data.content.map(i=>i.text||'').join('');
+}
+
+/* ── Helpers ── */
+function renderData(d) {
+  if (d.metrics) {
+    return '<div class="metric-row">' + d.metrics.map(m =>
+      `<div class="metric-card"><div class="val">${m.value}</div><div class="lbl">${m.name}</div></div>`
+    ).join('') + '</div>';
+  }
+  if (d.table) {
+    return `<table><thead><tr>${d.table.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`
+      + d.table.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')
+      + '</tbody></table>';
+  }
+  return '';
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function saveAnthropicKey(){var k=document.getElementById("anthropic-key-input").value.trim();if(!k){alert("הכניסי API Key");return;}localStorage.setItem("anthropic_key",k);document.getElementById("key-status").textContent="נשמר!";}
+if (clientId) document.getElementById('client-id-input').value = clientId;
+</script>
+</body>
+</html>
